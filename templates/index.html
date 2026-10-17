@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUGROB SQUAD — игровое сообщество</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="side-menu-overlay" id="sideMenuOverlay"></div>
+  <aside class="side-menu" id="sideMenu">
+    <div class="side-menu-head">
+      <span>Меню</span>
+      <button id="closeSideMenu">✕</button>
+    </div>
+    <nav class="side-menu-nav">
+      <a href="/"><i data-lucide="home"></i> Главная</a>
+      {% if user %}<a href="/profile"><i data-lucide="user"></i> Профиль</a>{% endif %}
+      <a href="/trade"><i data-lucide="shopping-bag"></i> Торговля</a>
+      <a href="/realty"><i data-lucide="store"></i> Недвижимость</a>
+      <a href="/places"><i data-lucide="map-pin"></i> Общественные места</a>
+      <a href="/organizations"><i data-lucide="briefcase"></i> Организации</a>
+      <a href="/docs"><i data-lucide="book-open"></i> Документация</a>
+      {% if user and (user.role == 'Администратор' or user.username == 'Vladimir' or user.username == 'Wito') %}
+      <a href="/admin"><i data-lucide="shield"></i> Админ-панель</a>
+      {% endif %}
+    </nav>
+  </aside>
+
+  <header class="topbar">
+    <button class="burger"><i data-lucide="menu"></i></button>
+    <a href="/" class="logo">SUGROB SQUAD</a>
+    <div class="topbar-right">
+      {% if user %}
+        <button class="icon-btn" id="openNotifications" title="Уведомления">
+          <i data-lucide="bell"></i>
+        </button>
+        <a href="/profile" class="user-chip">
+          <span class="user-chip-avatar">
+            {% if user.avatar %}<img src="{{ user.avatar }}" alt="">{% else %}<i data-lucide="user"></i>{% endif %}
+          </span>
+        </a>
+      {% else %}
+        <button class="nav-btn" id="openAuthBtn"><i data-lucide="log-in"></i> Войти</button>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-text">
+        <h1>SUGROB SQUAD<br>твоё игровое сообщество</h1>
+        <p class="subtitle">Кооперативные игры, честное выживание, дружная команда без лишней перегрузки</p>
+        <div class="btn-row-left">
+          {% if user %}
+            <a href="/profile" class="btn primary big"><i data-lucide="user"></i> Мой профиль</a>
+          {% else %}
+            <button class="btn primary big" id="joinSquadBtn"><i data-lucide="handshake"></i> Вступить в сквад</button>
+          {% endif %}
+        </div>
+      </div>
+      <div class="hero-image">
+        <div class="skin-placeholder"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><i data-lucide="crown"></i> Хочешь быть частью настоящей команды?</h2>
+      <p>Мы объединяем игроков, для которых игры — это не только про механики и цифры, а про эмоции и совместные победы.</p>
+    </section>
+
+    <section class="card">
+      <h2><i data-lucide="gamepad-2"></i> Мы рубимся в самые разные игры</h2>
+      <p>Здесь можно сыграть во многие кооперативные игры вместе — строительство, тактика, коллективные решения.</p>
+    </section>
+
+    <section class="card">
+      <h2><i data-lucide="landmark"></i> Своя уникальная система взаимодействия</h2>
+      <p>Иерархия от новичков до ветеранов, награды, почётные титулы. Мы создаём целую вселенную со своими правилами.</p>
+    </section>
+
+    <section class="card cta" id="joinSection">
+      <h2><i data-lucide="heart"></i> Присоединяйся к нам!</h2>
+      <p>Смело заходи в наш Discord — там намного больше информации.</p>
+      <a href="https://discord.gg/5aYZZbJu3" target="_blank" class="btn primary big"><i data-lucide="send"></i> Discord сквада</a>
+    </section>
+  </main>
+
+  {% if not user %}
+  <div class="modal-overlay" id="authModal">
+    <div class="modal">
+      <button class="modal-close" id="closeAuthBtn">✕</button>
+      <h2 class="modal-title">Войти в систему</h2>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="login">Войти</button>
+        <button class="tab" data-tab="register">Зарегистрироваться</button>
+      </div>
+
+      <form id="loginForm" class="tab-content active">
+        <label>Ник <span class="req">*</span></label>
+        <input type="text" name="username" placeholder="Zakatis" required>
+        <label>Пароль <span class="req">*</span></label>
+        <div class="password-wrap">
+          <input type="password" name="password" placeholder="••••••••••" required>
+          <button type="button" class="eye" onclick="togglePass(this)">👁</button>
+        </div>
+        <p class="err" id="loginError"></p>
+        <button type="submit" class="btn primary full">Подтвердить</button>
+      </form>
+
+      <form id="registerForm" class="tab-content">
+        <label>Ник <span class="req">*</span></label>
+        <input type="text" name="username" placeholder="Zakatis" required>
+        <label>Пароль <span class="req">*</span></label>
+        <div class="password-wrap">
+          <input type="password" name="password" placeholder="Минимум 6 символов" required>
+          <button type="button" class="eye" onclick="togglePass(this)">👁</button>
+        </div>
+        <p class="err" id="registerError"></p>
+        <button type="submit" class="btn primary full">Создать аккаунт</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

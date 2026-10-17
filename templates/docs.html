@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Документация — SUGROB SQUAD</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .docs-wrapper { display: grid; grid-template-columns: 260px 1fr 240px; gap: 30px; max-width: 1300px; margin: 0 auto; padding: 30px 20px; }
+    .docs-sidebar, .docs-toc { position: sticky; top: 90px; align-self: start; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-radius: 16px; padding: 20px 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.06); }
+    .docs-sidebar h3, .docs-toc h3 { font-size: 13px; text-transform: uppercase; color: #888; margin-bottom: 12px; letter-spacing: 1px; }
+    .docs-sidebar a, .docs-toc a { display: block; padding: 8px 12px; border-radius: 8px; color: #333; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.15s; }
+    .docs-sidebar a:hover, .docs-toc a:hover { background: #F5F5F5; }
+    .docs-sidebar a.active { background: #EEF2F8; color: #5865F2; font-weight: 700; }
+    .docs-content { background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); border-radius: 16px; padding: 40px 44px; box-shadow: 0 8px 32px rgba(0,0,0,0.06); min-height: 500px; }
+    .docs-content h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; color: #1a1a1a; }
+    .docs-content .lead { color: #666; font-size: 1.05rem; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #EEE; }
+    .docs-content h2 { font-size: 1.3rem; font-weight: 700; margin: 28px 0 12px; color: #1a1a1a; }
+    .docs-content p { color: #4A4A4A; line-height: 1.7; margin-bottom: 14px; }
+    .docs-content ul { margin: 12px 0 20px 24px; color: #4A4A4A; }
+    .docs-content ul li { margin-bottom: 6px; }
+    .docs-content blockquote { background: #F9F9F9; border-left: 4px solid #5865F2; padding: 14px 20px; margin: 16px 0; border-radius: 8px; color: #555; }
+    @media (max-width: 1000px) { .docs-wrapper { grid-template-columns: 1fr; } .docs-sidebar, .docs-toc { position: relative; top: 0; } }
+  </style>
+</head>
+<body>
+  <div class="side-menu-overlay" id="sideMenuOverlay"></div>
+  <aside class="side-menu" id="sideMenu">
+    <div class="side-menu-head">
+      <span>Меню</span>
+      <button id="closeSideMenu">✕</button>
+    </div>
+    <nav class="side-menu-nav">
+      <a href="/"><i data-lucide="home"></i> Главная</a>
+      {% if user %}<a href="/profile"><i data-lucide="user"></i> Профиль</a>{% endif %}
+      <a href="/trade"><i data-lucide="shopping-bag"></i> Торговля</a>
+      <a href="/realty"><i data-lucide="store"></i> Недвижимость</a>
+      <a href="/places"><i data-lucide="map-pin"></i> Общественные места</a>
+      <a href="/organizations"><i data-lucide="briefcase"></i> Организации</a>
+      <a href="/docs"><i data-lucide="book-open"></i> Документация</a>
+    </nav>
+  </aside>
+
+  <header class="topbar">
+    <button class="burger"><i data-lucide="menu"></i></button>
+    <a href="/" class="logo">SUGROB SQUAD</a>
+    <div class="topbar-right">
+      {% if user %}
+        <a href="/profile" class="user-chip">
+          <span class="user-chip-avatar">
+            {% if user.avatar %}<img src="{{ user.avatar }}" alt="">{% else %}<i data-lucide="user"></i>{% endif %}
+          </span>
+        </a>
+      {% else %}
+        <button class="nav-btn" id="openAuthBtn"><i data-lucide="log-in"></i> Войти</button>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="docs-wrapper">
+    <aside class="docs-sidebar">
+      <h3>Основные</h3>
+      <a href="#intro" class="active">Введение</a>
+      <a href="#how-to-play">Как начать играть?</a>
+      <a href="#terms">Словарь терминов</a>
+      <a href="#commands">Команды</a>
+      <a href="#rules">Правила сервера</a>
+      <a href="#mods">Разрешённые модификации</a>
+      <a href="#faq">Частые вопросы</a>
+    </aside>
+
+    <main class="docs-content">
+      <h1 id="intro">Правила сервера</h1>
+      <p class="lead">Официальный документ правил сервера Sugrob Squad.</p>
+
+      <p>Добро пожаловать на сервер <b>Sugrob Squad</b> — полуванильный сервер, где вас ждут приключения и дружелюбное сообщество.</p>
+      <p><b>Правила</b> — это не просто список запретов, а основа для создания комфортных условий. Мы ценим честность и взаимоуважение.</p>
+
+      <h2 id="rules">1. Общие правила</h2>
+      <ul>
+        <li>Уважай других игроков. Оскорбления и травля запрещены.</li>
+        <li>Не используй читы и стороннее ПО.</li>
+        <li>Не гриферь и не воруй.</li>
+        <li>Не спамь и не флуди.</li>
+      </ul>
+
+      <h2 id="mods">2. Разрешённые и запрещённые модификации</h2>
+      <p><b>Разрешено:</b></p>
+      <ul>
+        <li>OptiFine, Sodium, Lithium</li>
+        <li>Мини-карты без телепортации</li>
+        <li>Шейдеры</li>
+      </ul>
+      <p><b>Запрещено:</b></p>
+      <ul>
+        <li>X-Ray и любые моды, показывающие руды</li>
+        <li>KillAura, Fly, SpeedHack</li>
+        <li>Автокликеры</li>
+      </ul>
+
+      <blockquote>Если сомневаешься, разрешён ли мод — спроси у администрации.</blockquote>
+
+      <h2 id="faq">Частые вопросы</h2>
+      <p><b>Как попасть на сервер?</b> Зарегистрируйся на сайте, войди в профиль.</p>
+      <p><b>Как вступить в министерство?</b> Открой раздел <a href="/organizations">«Организации»</a> и заполни форму.</p>
+      <p><b>Как арендовать участок?</b> Перейди в <a href="/realty">«Недвижимость»</a> и нажми «Арендовать».</p>
+    </main>
+
+    <aside class="docs-toc">
+      <h3>На этой странице</h3>
+      <a href="#rules">1. Общие правила</a>
+      <a href="#mods">2. Модификации</a>
+      <a href="#faq">Частые вопросы</a>
+    </aside>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

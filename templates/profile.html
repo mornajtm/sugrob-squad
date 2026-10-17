@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Профиль — SUGROB SQUAD</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="side-menu-overlay" id="sideMenuOverlay"></div>
+  <aside class="side-menu" id="sideMenu">
+    <div class="side-menu-head">
+      <span>Меню</span>
+      <button id="closeSideMenu">✕</button>
+    </div>
+    <nav class="side-menu-nav">
+      <a href="/"><i data-lucide="home"></i> Главная</a>
+      <a href="/profile"><i data-lucide="user"></i> Профиль</a>
+      <a href="/trade"><i data-lucide="shopping-bag"></i> Торговля</a>
+      <a href="/realty"><i data-lucide="store"></i> Недвижимость</a>
+      <a href="/places"><i data-lucide="map-pin"></i> Общественные места</a>
+      <a href="/organizations"><i data-lucide="briefcase"></i> Организации</a>
+      <a href="/docs"><i data-lucide="book-open"></i> Документация</a>
+      {% if user and (user.role == 'Администратор' or user.username == 'Vladimir' or user.username == 'Wito') %}
+      <a href="/admin"><i data-lucide="shield"></i> Админ-панель</a>
+      {% endif %}
+    </nav>
+  </aside>
+
+  <header class="topbar">
+    <button class="burger"><i data-lucide="menu"></i></button>
+    <a href="/" class="logo">SUGROB SQUAD</a>
+    <div class="topbar-right">
+      <button class="icon-btn" id="openNotifications" title="Уведомления">
+        <i data-lucide="bell"></i>
+      </button>
+      <a href="/profile" class="user-chip">
+        <span class="user-chip-avatar">
+          {% if user and user.avatar %}<img src="{{ user.avatar }}" alt="">{% else %}<i data-lucide="user"></i>{% endif %}
+        </span>
+      </a>
+      <button id="logoutBtn" class="nav-btn" style="margin-left:6px">Выйти</button>
+    </div>
+  </header>
+
+  <main class="container narrow">
+    <div class="card" id="profileCard">
+      <p class="muted">Загрузка...</p>
+    </div>
+  </main>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
