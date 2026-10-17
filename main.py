@@ -1,4 +1,4 @@
-﻿from flask import Flask, request, jsonify, render_template, redirect
+from flask import Flask, request, jsonify, render_template, redirect
 import psycopg2
 import psycopg2.extras
 import hashlib
@@ -6,22 +6,15 @@ import secrets
 import os
 import pathlib
 import urllib.request
-import urllib.parse
 import time
 import json as json_lib
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 from werkzeug.utils import secure_filename
-from werkzeug.utils import secure_filename
-
 from dotenv import load_dotenv
+
 load_dotenv()
 
 BASE_DIR = pathlib.Path(__file__).parent
-from dotenv import load_dotenv
-load_dotenv()
-
-BASE_DIR = pathlib.Path(__file__).parent
-
 
 def _clean_db_url(url):
     if not url:
@@ -38,27 +31,23 @@ def _clean_db_url(url):
     except Exception:
         return url
 
-
 DATABASE_URL = _clean_db_url(os.environ.get("DATABASE_URL", ""))
 
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 
-
 def allowed_file(name):
     return "." in name and name.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
-
 app = Flask(__name__)
 
-ADMIN_USERNAME = "Vladimir"
-ADMIN_PASSWORD = "Nik09112013"
-ADMIN2_USERNAME = "Wito"
-ADMIN2_PASSWORD = "kvadrober"
-
+# Безопасность: логины и пароли админов берутся из переменных окружения Vercel (.env локально)
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "Vladimir")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+ADMIN2_USERNAME = os.environ.get("ADMIN2_USERNAME", "Wito")
+ADMIN2_PASSWORD = os.environ.get("ADMIN2_PASSWORD", "")
 
 def hash_pw(pw):
     return hashlib.sha256(pw.encode()).hexdigest()
-
 
 DISCORD_CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID", "")
 DISCORD_CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET", "")
@@ -67,7 +56,6 @@ DISCORD_GUILD_ID = os.environ.get("DISCORD_GUILD_ID", "")
 DISCORD_ROLE_ID = os.environ.get("DISCORD_ROLE_ID", "")
 DISCORD_REDIRECT = os.environ.get("DISCORD_REDIRECT", "https://sugrobsquad.vercel.app/auth/discord/callback")
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
-
 
 def send_discord(text):
     if not DISCORD_WEBHOOK_URL:
@@ -79,8 +67,11 @@ def send_discord(text):
     except Exception as e:
         print("Discord webhook error:", e)
 
-
 def ensure_admin(cur):
+    if not ADMIN_PASSWORD or not ADMIN2_PASSWORD:
+        print("⚠️ Пароли админов не заданы в переменных окружения!")
+        return
+
     admins = [(ADMIN_USERNAME, ADMIN_PASSWORD), (ADMIN2_USERNAME, ADMIN2_PASSWORD)]
     for username, password in admins:
         cur.execute("SELECT id FROM users WHERE username = %s", (username,))
@@ -91,7 +82,6 @@ def ensure_admin(cur):
             continue
         cur.execute("INSERT INTO users (username, password, nickname, role, balance) VALUES (%s, %s, %s, %s, %s)",
                     (username, hash_pw(password), username, "Администратор", 999999))
-
 
 def init_db():
     con = psycopg2.connect(DATABASE_URL)
@@ -184,27 +174,24 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    
     cur.execute("DELETE FROM products WHERE shop IS NULL OR shop = '' OR shop NOT IN (SELECT title FROM plots WHERE kind = 'shop')")
     ensure_admin(cur)
     con.commit()
     cur.close()
     con.close()
 
-
 def db():
     con = psycopg2.connect(DATABASE_URL)
     con.cursor_factory = psycopg2.extras.RealDictCursor
     return con
 
-
 SESSIONS = {}
-
 
 def make_token(uid):
     token = secrets.token_urlsafe(32)
     SESSIONS[token] = uid
     return token
-
 
 def current_user():
     token = request.cookies.get("token")
@@ -218,59 +205,48 @@ def current_user():
     con.close()
     return user
 
-
 def is_admin(u):
     if not u: return False
     return u.get("role") == "Администратор" or u.get("username") in ("Vladimir", "Wito")
-
 
 def require_admin(u):
     if not is_admin(u): return jsonify({"error": "Доступ только для админа"}), 403
     return None
 
-
 @app.route("/")
 def home():
     return render_template("index.html", user=current_user())
-
 
 @app.route("/profile")
 def profile_page():
     if not current_user(): return redirect("/")
     return render_template("profile.html")
 
-
 @app.route("/trade")
 def trade_page():
     return render_template("trade.html", user=current_user())
-
 
 @app.route("/realty")
 def realty_page():
     return render_template("realty.html", user=current_user())
 
-
 @app.route("/places")
 def places_page():
     return render_template("places.html", user=current_user())
-
 
 @app.route("/organizations")
 def organizations_page():
     return render_template("organizations.html", user=current_user())
 
-
 @app.route("/docs")
 def docs_page():
     return render_template("docs.html", user=current_user())
-
 
 @app.route("/admin")
 def admin_page():
     u = current_user()
     if not is_admin(u): return redirect("/")
     return render_template("admin.html", user=u)
-
 
 @app.route("/api/register", methods=["POST"])
 def api_register():
@@ -295,7 +271,6 @@ def api_register():
     res.set_cookie("token", token, httponly=True, samesite="Lax", max_age=60*60*24*7)
     return res
 
-
 @app.route("/api/login", methods=["POST"])
 def api_login():
     data = request.get_json() or {}
@@ -315,7 +290,6 @@ def api_login():
     res.set_cookie("token", token, httponly=True, samesite="Lax", max_age=60*60*24*7)
     return res
 
-
 @app.route("/api/logout", methods=["POST"])
 def api_logout():
     token = request.cookies.get("token")
@@ -323,7 +297,6 @@ def api_logout():
     res = jsonify({"success": True})
     res.set_cookie("token", "", max_age=0)
     return res
-
 
 @app.route("/api/profile", methods=["GET"])
 def api_get_profile():
@@ -337,7 +310,6 @@ def api_get_profile():
         "created_at": u["created_at"].isoformat() if u["created_at"] else "",
     }})
 
-
 @app.route("/api/profile", methods=["PUT"])
 def api_update_profile():
     u = current_user()
@@ -349,7 +321,6 @@ def api_update_profile():
                 (data.get("nickname", ""), data.get("about", ""), data.get("avatar", ""), u["id"]))
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
-
 
 @app.route("/api/products", methods=["GET"])
 def api_products():
@@ -365,7 +336,6 @@ def api_products():
         if d.get("updated_at"): d["updated_at"] = d["updated_at"].isoformat()
         result.append(d)
     return jsonify({"products": result})
-
 
 @app.route("/api/products", methods=["POST"])
 def api_create_product():
@@ -386,7 +356,6 @@ def api_create_product():
     send_discord("Товар выставлен: " + item)
     return jsonify({"success": True})
 
-
 @app.route("/api/products/<int:pid>", methods=["DELETE"])
 def api_delete_product(pid):
     u = current_user()
@@ -396,7 +365,6 @@ def api_delete_product(pid):
     cur.execute("DELETE FROM products WHERE id = %s AND seller_id = %s", (pid, u["id"]))
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
-
 
 @app.route("/api/plots", methods=["GET"])
 def api_plots():
@@ -412,7 +380,6 @@ def api_plots():
         result.append(d)
     return jsonify({"plots": result})
 
-
 @app.route("/api/plots", methods=["POST"])
 def api_create_plot():
     u = current_user()
@@ -427,7 +394,6 @@ def api_create_plot():
          int(data.get("price") or 1), data.get("kind", "rent")))
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
-
 
 @app.route("/api/plots/<int:pid>/rent", methods=["POST"])
 def api_rent_plot(pid):
@@ -447,7 +413,6 @@ def api_rent_plot(pid):
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
 
-
 @app.route("/api/my-shops", methods=["GET"])
 def api_my_shops():
     u = current_user()
@@ -458,7 +423,6 @@ def api_my_shops():
     rows = cur.fetchall()
     cur.close(); con.close()
     return jsonify({"shops": [dict(r) for r in rows]})
-
 
 @app.route("/api/places", methods=["GET"])
 def api_places():
@@ -474,7 +438,6 @@ def api_places():
         result.append(d)
     return jsonify({"places": result})
 
-
 @app.route("/api/places", methods=["POST"])
 def api_create_place():
     u = current_user()
@@ -489,7 +452,6 @@ def api_create_place():
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
 
-
 @app.route("/api/places/<int:pid>", methods=["DELETE"])
 def api_delete_place(pid):
     u = current_user()
@@ -499,7 +461,6 @@ def api_delete_place(pid):
     cur.execute("DELETE FROM places WHERE id = %s AND owner_id = %s", (pid, u["id"]))
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
-
 
 @app.route("/api/org/apply", methods=["POST"])
 def api_org_apply():
@@ -514,7 +475,6 @@ def api_org_apply():
     org_name = org_names.get(data.get("org", ""), data.get("org", ""))
     send_discord("Новая заявка в " + org_name + " от " + (u["nickname"] or u["username"]))
     return jsonify({"success": True})
-
 
 @app.route("/api/admin/users", methods=["GET"])
 def admin_users():
@@ -533,7 +493,6 @@ def admin_users():
         result.append(d)
     return jsonify({"users": result})
 
-
 @app.route("/api/admin/users/<int:uid>/password", methods=["POST"])
 def admin_change_password(uid):
     u = current_user()
@@ -548,7 +507,6 @@ def admin_change_password(uid):
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
 
-
 @app.route("/api/admin/users/<int:uid>/ban", methods=["POST"])
 def admin_ban_user(uid):
     u = current_user()
@@ -562,7 +520,6 @@ def admin_ban_user(uid):
     cur.execute("UPDATE users SET is_banned = %s WHERE id = %s", (ban, uid))
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
-
 
 @app.route("/api/admin/users/<int:uid>/balance", methods=["POST"])
 def admin_change_balance(uid):
@@ -580,7 +537,6 @@ def admin_change_balance(uid):
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
 
-
 @app.route("/api/admin/users/<int:uid>", methods=["DELETE"])
 def admin_delete_user(uid):
     u = current_user()
@@ -593,7 +549,6 @@ def admin_delete_user(uid):
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
 
-
 @app.route("/api/admin/products/<int:pid>", methods=["DELETE"])
 def admin_delete_product(pid):
     u = current_user()
@@ -604,7 +559,6 @@ def admin_delete_product(pid):
     cur.execute("DELETE FROM products WHERE id = %s", (pid,))
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
-
 
 @app.route("/api/admin/plots/<int:pid>", methods=["DELETE"])
 def admin_delete_plot(pid):
@@ -617,7 +571,6 @@ def admin_delete_plot(pid):
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
 
-
 @app.route("/api/admin/places/<int:pid>", methods=["DELETE"])
 def admin_delete_place(pid):
     u = current_user()
@@ -628,7 +581,6 @@ def admin_delete_place(pid):
     cur.execute("DELETE FROM places WHERE id = %s", (pid,))
     con.commit(); cur.close(); con.close()
     return jsonify({"success": True})
-
 
 @app.route("/api/health")
 def api_health():
@@ -649,7 +601,6 @@ def api_health():
         info["db_status"] = "ERROR"
         info["db_error"] = str(e)
     return jsonify(info)
-
 
 try:
     init_db()
